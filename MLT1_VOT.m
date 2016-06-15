@@ -265,8 +265,6 @@ while true
         %     elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.2 && rand(1) > 0.3
     elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.2 && max(pre_heat_map(:)) < 0.5
         update = true;
-    elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.7
-         update = true;
     else
         update = false;
     end
