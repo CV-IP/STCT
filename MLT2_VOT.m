@@ -27,13 +27,15 @@ roi1 = impreprocess(roi1);
 fsolver.net.set_net_phase('test');
 feature_input = fsolver.net.blobs('data');
 feature_blob4 = fsolver.net.blobs('conv4_3');
+% feature_blob4 = fsolver.net.blobs('pool3');
 fsolver.net.set_input_dim([0, 1, 3, roi_size, roi_size]);
 feature_input.set_data(single(roi1));
 fsolver.net.forward_prefilled();
 deep_feature1 = feature_blob4.get_data();
 fea_sz = size(deep_feature1);
 cos_win1 = single(hann(fea_sz(1)) * hann(fea_sz(2))');
-cos_win = cos_win1 .* cos_win1;
+% cos_win = cos_win1 .* cos_win1;
+cos_win = cos_win1;
 % cos_img = single(hann(roi_size) * hann(roi_size)');
 deep_feature1 = bsxfun(@times, deep_feature1, cos_win);
 scale_param.train_sample = get_scale_sample(deep_feature1, scale_param.scaleFactors_train, scale_param.scale_window_train);
@@ -194,7 +196,7 @@ while true
         scale_score = scale_score{1};
         
         [max_scale_score, recovered_scale]= max(scale_score);
-        if max_scale_score > scale_param.scale_thr && max(pre_heat_map(:))> 0.3
+        if max_scale_score > scale_param.scale_thr && max(pre_heat_map(:))> 0.4
             recovered_scale = scale_param.number_of_scales_test+1 - recovered_scale;
         else
             recovered_scale = (scale_param.number_of_scales_test+1)/2;
@@ -213,7 +215,7 @@ while true
 %     fprintf(' scale = %f\t', scale_param.scaleFactors_test(recovered_scale));
 %     fprintf(' confidence = %f\n', max(pre_heat_map(:)));
     %% Update lnet and gnet
-    if recovered_scale ~= (scale_param.number_of_scales_test+1)/2
+    if recovered_scale ~= (scale_param.number_of_scales_test+1)/2 
         %         l_off = location_last(1:2)-location(1:2);
         %         map2 = GetMap(size(im2), fea_sz, roi_size, floor(location), floor(l_off), roi_scale_factor, map_sigma_factor, 'trans_gaussian');
         roi2 = ext_roi(im2, location, center_off,  roi_size, roi_scale_factor);
@@ -259,11 +261,22 @@ while true
 %         stem(im_handle_init2, scale_score);
 %     end
 %     drawnow;
+    %% detect distracter
+    max_ind = find(max(pre_heat_map(:)) == pre_heat_map, 1);
+    [max_r, max_c]=ind2sub([size(pre_heat_map, 1), size(pre_heat_map, 2)], max_ind);
+    heat_r_min = max(max_r-1, 1);
+    heat_r_max = min(max_r+1, size(pre_heat_map, 2));
+    heat_c_min = max(max_c-1, 1);
+    pre_heat_map_bin = double(pre_heat_map > 0.2);
+    heat_c_max = min(max_c+1, size(pre_heat_map_bin, 1));
+    fore_resp = sum(sum(pre_heat_map_bin(heat_r_min:heat_r_max, heat_c_min:heat_c_max)));
+    back_resp = sum(pre_heat_map_bin(:)) - fore_resp;
+%     fprintf('\nfore: %f, back: %f \n', fore_resp, back_resp);
     %% update with different strategies for different feature maps
     if  im2_id < start_frame -1 + 30 && max(pre_heat_map(:))> 0.05 || im2_id < start_frame -1 + 6
         update = true;
         %     elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.2 && rand(1) > 0.3
-    elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.2 && max(pre_heat_map(:)) < 0.5
+    elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.3 && max(pre_heat_map(:)) < 0.5
         update = true;
     else
         update = false;
@@ -286,10 +299,10 @@ while true
             fsolver.net.empty_net_param_diff();
             pre_heat_map_train = fsolver.net.forward_from_to(middle_layer + 1, last_layer);
             pre_heat_map_train = pre_heat_map_train{1};
-            diff_cnna2 =  0.5*(pre_heat_map_train-map2);
+            diff_cnna2 =  1.5*(pre_heat_map_train-map2);
             %
             diff1 = pre_heat_map_train(:,:,:,1)-map2(:,:,:,1);
-            if(sum(abs(diff1(:))) < 25)
+            if(sum(abs(diff1(:))) < 25 && back_resp <1)
                 break;
             end
             fsolver.net.backward_from_to({single(diff_cnna2)}, last_layer, middle_layer + 1);

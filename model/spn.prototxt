@@ -6,8 +6,15 @@ input_dim: 512
 input_dim: 46
 input_dim: 46
 
+layers {
+    bottom: "data"
+    top: "data_norm"
+    name: "mvn1"
+    type: MVN
+}
+
 layers { 
-  bottom: "data"
+  bottom: "data_norm"
   top: "drop_data"
   name: "drop_data"
   type: DROPOUT
@@ -15,6 +22,7 @@ layers {
     dropout_ratio: 0.4
   }
 }
+
 layers {
   bottom: "drop_data"
   top: "conv5_f2"
