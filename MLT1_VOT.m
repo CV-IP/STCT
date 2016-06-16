@@ -1,4 +1,4 @@
-function MLT_VOT
+function MLT_VOT1
 cleanupObj = onCleanup(@cleanupFun);
 % rand('state', 0);
 RandStream.setGlobalStream(RandStream('mt19937ar', 'Seed', sum(clock)));
@@ -138,7 +138,7 @@ close all
 spn.net.set_input_dim([0, scale_param.number_of_scales_test, fea_sz(3), fea_sz(2), fea_sz(1)]);
 im2_id = 0;
 start_frame = 1;
-last_conf = 10;
+last_conf = 0;
 while true
       [handle, im2_name] = handle.frame(handle); % Get the next frame
 
