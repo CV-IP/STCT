@@ -1,4 +1,4 @@
-function MLT_VOT2
+function MLT3_VOT
 cleanupObj = onCleanup(@cleanupFun);
 % rand('state', 0);
 RandStream.setGlobalStream(RandStream('mt19937ar', 'Seed', sum(clock)));
@@ -35,6 +35,8 @@ deep_feature1 = feature_blob4.get_data();
 fea_sz = size(deep_feature1);
 cos_win1 = single(hann(fea_sz(1)) * hann(fea_sz(2))');
 % cos_win = cos_win1 .* cos_win1;
+
+cos_win1 = cos_win1.^2;
 cos_win = cos_win1;
 % cos_img = single(hann(roi_size) * hann(roi_size)');
 deep_feature1 = bsxfun(@times, deep_feature1, cos_win);
@@ -233,7 +235,7 @@ while true
         scale_param.train_sample = get_scale_sample(deep_feature_scale, scale_param.scaleFactors_train, scale_param.scale_window_train);
         train_scale_score = spn.net.forward({scale_param.train_sample});
         train_scale_score = train_scale_score{1};
-        diff_spn = (train_scale_score-scale_param.y)/length(scale_param.number_of_scales_train);
+        diff_spn = 0.5*(train_scale_score-scale_param.y)/length(scale_param.number_of_scales_train);
         diff_spn = {single(diff_spn)};
         
         spn.net.backward(diff_spn);
@@ -302,7 +304,7 @@ while true
             diff_cnna2 =  1.5*(pre_heat_map_train-map2);
             %
             diff1 = pre_heat_map_train(:,:,:,1)-map2(:,:,:,1);
-            if(sum(abs(diff1(:))) < 25 && back_resp <1)
+            if(sum(abs(diff1(:))) < 25)
                 break;
             end
             fsolver.net.backward_from_to({single(diff_cnna2)}, last_layer, middle_layer + 1);
