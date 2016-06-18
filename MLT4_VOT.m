@@ -1,6 +1,6 @@
 function MLT4_VOT
 cleanupObj = onCleanup(@cleanupFun);
-debug = true;
+debug = false;
 % rand('state', 0);
 RandStream.setGlobalStream(RandStream('mt19937ar', 'Seed', sum(clock)));
 [handle, image, init_rect] = vot('rectangle'); % Obtain communication object
@@ -315,7 +315,7 @@ while true
             diff_cnna2 =  2*(pre_heat_map_train-map2);
             %
             diff1 = pre_heat_map_train(:,:,:,1)-map2(:,:,:,1);
-            if(sum(abs(diff1(:))) < 20)
+            if(sum(abs(diff1(:))) < 20 && im2_id > 6 || sum(abs(diff1(:))) < 25)
                 break;
             end
             fsolver.net.backward_from_to({single(diff_cnna2)}, last_layer, middle_layer + 1);
