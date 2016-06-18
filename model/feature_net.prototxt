@@ -440,8 +440,8 @@ layer {
 
 layer {
   bottom: "conva_1_norm"
-  top: "conva_2"
-  name: "conva_2"
+  top: "conva_2_1"
+  name: "conva_2_1"
   type: "Convolution"
   param {
     lr_mult: 1
@@ -452,7 +452,35 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 10
+    num_output: 5
+    pad: 1
+  #  mask: true
+    kernel_size: 3
+    weight_filler {
+      type: "gaussian"
+      std: 1e-2 #1e-7
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.
+    }
+  }
+}
+layer {
+  bottom: "conva_1_norm"
+  top: "conva_2_2"
+  name: "conva_2_2"
+  type: "Convolution"
+  param {
+    lr_mult: 1
+    decay_mult: 0.01
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 5
     pad: 2
   #  mask: true
     kernel_size: 5
@@ -465,6 +493,16 @@ layer {
       value: 0.
     }
   }
+}
+layer {
+    bottom: "conva_2_1"
+    bottom: "conva_2_2"
+    top: "conva_2"
+    name: "conva_2"
+    type: "Concat"
+    concat_param {
+        axis: 1
+    }
 }
 layer{ 
   bottom: "conva_2"

@@ -17,7 +17,7 @@ fsolver.net.copy_from(model_file);
 spn_solver_def_file =[cur_path 'model/spn_solver.prototxt'];
 spn = caffe.Solver(spn_solver_def_file);
 
-max_iter = 80;%150;
+max_iter = 100;%150;
 mean_pix = [103.939, 116.779, 123.68]; 
 
 %% Init location parameters

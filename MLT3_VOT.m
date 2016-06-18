@@ -12,7 +12,7 @@ end
 [init_rect] = region2location(im1, init_rect);
 set_tracker_param;
 middle_layer = 32;
-last_layer = 43;
+last_layer = 46;
 % middle_layer = 17;
 % last_layer = 21;
 %% read images
@@ -36,7 +36,7 @@ fea_sz = size(deep_feature1);
 cos_win1 = single(hann(fea_sz(1)) * hann(fea_sz(2))');
 % cos_win = cos_win1 .* cos_win1;
 
-cos_win1 = cos_win1.^2;
+% cos_win1 = cos_win1.^2;
 cos_win = cos_win1;
 % cos_img = single(hann(roi_size) * hann(roi_size)');
 deep_feature1 = bsxfun(@times, deep_feature1, cos_win);
@@ -235,7 +235,7 @@ while true
         scale_param.train_sample = get_scale_sample(deep_feature_scale, scale_param.scaleFactors_train, scale_param.scale_window_train);
         train_scale_score = spn.net.forward({scale_param.train_sample});
         train_scale_score = train_scale_score{1};
-        diff_spn = 0.5*(train_scale_score-scale_param.y)/length(scale_param.number_of_scales_train);
+        diff_spn = 1*(train_scale_score-scale_param.y)/length(scale_param.number_of_scales_train);
         diff_spn = {single(diff_spn)};
         
         spn.net.backward(diff_spn);
@@ -278,7 +278,7 @@ while true
     if  im2_id < start_frame -1 + 30 && max(pre_heat_map(:))> 0.05 || im2_id < start_frame -1 + 6
         update = true;
         %     elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.2 && rand(1) > 0.3
-    elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.3 && max(pre_heat_map(:)) < 0.5
+    elseif im2_id >= start_frame -1 + 30 && move && max(pre_heat_map(:))> 0.25 && max(pre_heat_map(:)) < 0.5 || max(pre_heat_map(:))>0.6
         update = true;
     else
         update = false;
@@ -301,7 +301,7 @@ while true
             fsolver.net.empty_net_param_diff();
             pre_heat_map_train = fsolver.net.forward_from_to(middle_layer + 1, last_layer);
             pre_heat_map_train = pre_heat_map_train{1};
-            diff_cnna2 =  1.5*(pre_heat_map_train-map2);
+            diff_cnna2 =  2*(pre_heat_map_train-map2);
             %
             diff1 = pre_heat_map_train(:,:,:,1)-map2(:,:,:,1);
             if(sum(abs(diff1(:))) < 25)
