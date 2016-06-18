@@ -1,5 +1,5 @@
 function[scale_param] = init_scale_estimator
-scale_param.scale_thr = 0.3;
+scale_param.scale_thr = 0.2;
 scale_param.scale_sigma_factor = 0.25; %1/4;
 scale_param.number_of_scales_test = 9; 
 scale_param.number_of_scales_train = 33;
