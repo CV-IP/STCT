@@ -1,4 +1,4 @@
-function MLT4_VOT
+function MLT5_VOT
 cleanupObj = onCleanup(@cleanupFun);
 debug = false;
 % rand('state', 0);
@@ -39,6 +39,7 @@ cos_win1 = single(hann(fea_sz(1)) * hann(fea_sz(2))');
 
 % cos_win1 = cos_win1.^2;
 cos_win = double(cos_win1.^4>0.1);
+cos_win = double(cos_win1>0.65);
 % cos_img = single(hann(roi_size) * hann(roi_size)');
 deep_feature1 = bsxfun(@times, deep_feature1, cos_win);
 scale_param.train_sample = get_scale_sample(deep_feature1, scale_param.scaleFactors_train, scale_param.scale_window_train);
@@ -151,7 +152,9 @@ start_frame = 1;
 last_conf = 0;
 while true
     [handle, im2_name] = handle.frame(handle); % Get the next frame
-    
+    if im2_id == 93
+        480;
+    end
     if isempty(im2_name) % Are we done?
         break;
     end;
@@ -205,7 +208,7 @@ while true
         scale_score = scale_score{1};
         
         [max_scale_score, recovered_scale]= max(scale_score);
-        if max_scale_score > scale_param.scale_thr && max(pre_heat_map(:))> 0.4
+        if max_scale_score > scale_param.scale_thr && max(pre_heat_map(:))> 0.3
             recovered_scale = scale_param.number_of_scales_test+1 - recovered_scale;
         else
             recovered_scale = (scale_param.number_of_scales_test+1)/2;
@@ -254,12 +257,12 @@ while true
     %% show results
     if debug
         if im2_id == start_frame,  %first frame, create GUI
-            figure('Name','Tracking Results');
+            figure(10);
             im_handle = imshow(uint8(im2), 'Border','tight', 'InitialMag', 100 + 100 * (length(im2) < 500));
             rect_handle = rectangle('Position', location, 'EdgeColor','r', 'linewidth', 2);
             text_handle = text(10, 10, sprintf('#%d',im2_id));
             set(text_handle, 'color', [1 1 0], 'fontsize', 16, 'fontweight', 'bold');
-            figure('Name','Tracking Results');
+            figure(20);
             subplot(1,2,1);
             im_handle_init1 = imshow(pre_heat_map);
             subplot(1,2,2);
@@ -277,11 +280,11 @@ while true
     %% detect distracter
     max_ind = find(max(pre_heat_map(:)) == pre_heat_map, 1);
     [max_r, max_c]=ind2sub([size(pre_heat_map, 1), size(pre_heat_map, 2)], max_ind);
-    heat_r_min = max(max_r-1, 1);
-    heat_r_max = min(max_r+1, size(pre_heat_map, 2));
-    heat_c_min = max(max_c-1, 1);
-    pre_heat_map_bin = double(pre_heat_map > 0.2);
-    heat_c_max = min(max_c+1, size(pre_heat_map_bin, 1));
+    heat_r_min = max(max_r-3, 1);
+    heat_r_max = min(max_r+3, size(pre_heat_map, 2));
+    heat_c_min = max(max_c-3, 1);
+    pre_heat_map_bin = double(pre_heat_map > 0.1);
+    heat_c_max = min(max_c+3, size(pre_heat_map_bin, 1));
     fore_resp = sum(sum(pre_heat_map_bin(heat_r_min:heat_r_max, heat_c_min:heat_c_max)));
     back_resp = sum(pre_heat_map_bin(:)) - fore_resp;
     %     fprintf('\nfore: %f, back: %f \n', fore_resp, back_resp);
@@ -315,7 +318,8 @@ while true
             diff_cnna2 =  2*(pre_heat_map_train-map2);
             %
             diff1 = pre_heat_map_train(:,:,:,1)-map2(:,:,:,1);
-            if(sum(abs(diff1(:))) < 20 && im2_id > 6 || sum(abs(diff1(:))) < 25)
+%             if(sum(abs(diff1(:))) < 25 && im2_id > 6 || sum(abs(diff1(:))) < 25 && im2_id <= 6)
+            if(sum(abs(diff1(:))) < 25 && back_resp < 3)
                 break;
             end
             fsolver.net.backward_from_to({single(diff_cnna2)}, last_layer, middle_layer + 1);
